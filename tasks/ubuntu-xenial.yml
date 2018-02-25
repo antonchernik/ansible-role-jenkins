@@ -1,0 +1,27 @@
+- name: Add an Apt jenkins.io.key, uses whichever key is at the URL
+  apt_key:
+    url: https://pkg.jenkins.io/debian/jenkins.io.key
+    state: present
+
+- name: Jenkins ROLE | Adding pkg.jenkins.io to sources.list
+  lineinfile: dest=/etc/apt/sources.list line="deb http://pkg.jenkins.io/debian-stable binary/"
+
+- name: Jenkins ROLE | Updating apt cache
+  apt:
+    update_cache: yes
+
+- name: Jenkins ROLE | Install Jenkins
+  apt: name={{ item }} force=yes install_recommends=yes
+  with_items:
+   - jenkins
+
+- template:
+    src: ../templates/etc/default/jenkins.j2
+    dest: /etc/default/jenkins
+    owner: root
+    group: root
+    mode: 0644
+  become: true
+
+- name: Jenkins ROLE | Ensure Jenkins is restarted
+  action: service name=jenkins state=restarted
